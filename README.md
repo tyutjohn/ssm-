@@ -373,6 +373,160 @@ public class PersonController {
 
 
 
+------
+
+* 2020/4/2
+* second commit
+
+```mysql
+/*
+ *Mybatis配置多表关联映射，类型主要为一对一，一对多，多对多，此处举例一对一类型,新建account表，uid字段  映射person中的id，即根据uid查询出person中id对应的数据，此处的实现方法为嵌套结果。
+ */
+```
+
+```sql
+/*
+ *新建一张account表，字段为id,uid,money，其中uid和person表中的id关联
+ */
+ /*
+ Navicat Premium Data Transfer
+
+ Source Server         : springboot
+ Source Server Type    : MySQL
+ Source Server Version : 80019
+ Source Host           : localhost:3306
+ Source Schema         : test
+
+ Target Server Type    : MySQL
+ Target Server Version : 80019
+ File Encoding         : 65001
+
+ Date: 02/04/2020 08:46:28
+*/
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for account
+-- ----------------------------
+DROP TABLE IF EXISTS `account`;
+CREATE TABLE `account`  (
+  `id` int(0) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` int(0) NOT NULL,
+  `money` double(255, 0) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of account
+-- ----------------------------
+INSERT INTO `account` VALUES (1, 2, 1000);
+INSERT INTO `account` VALUES (2, 1, 3000);
+INSERT INTO `account` VALUES (3, 3, 5000);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+```
+
+```java
+/*
+ * main/~/bean/Account 新建bean类，并将主表实体person类的对象引用
+ */
+package com.tyutjohn.test.bean;
+
+public class Account {
+    private Integer id;
+    private Double money;
+    //主表实体的对象的引用
+    private Person person;								//上次提交创建的person类
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Person getPerson() {
+        return person;
+    }
+
+    public void setPerson(Person person) {
+        this.person = person;
+    }
+
+    public Double getMoney() {
+        return money;
+    }
+
+    public void setMoney(Double money) {
+        this.money = money;
+    }
+
+
+}
+
+```
+
+```markdown
+/*
+ * mapper,service,Impl如同person类
+ */
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace为mapper的路径，select id为mapper定义的接口，resultMap为下方定义的pojo-->
+
+<mapper namespace="com.tyutjohn.test.mapper.AccountMapper">
+    <select id="selectAccountList" resultMap="AccountResultMap">
+        select * from account a,person p where a.uid=p.id
+    </select>
+    
+    <!--resultmap的id对应上方select的resultmap，type类型为bean类的结构，assocation为person类的映射，property属性为定义的account中定义的person，javaType为person bean类型-->
+    
+    <resultMap id="AccountResultMap" type="com.tyutjohn.test.bean.Account">
+        <id property="id" column="uid"/>
+        <result property="money" column="money"/>
+        <association property="person" javaType="com.tyutjohn.test.bean.Person">
+            <id property="id" column="id"/>
+            <result property="name" column="name"/>
+        </association>
+    </resultMap>
+</mapper>
+
+```
+
+### 
+
+### 总结
+
+Mybatis中可以实现三种关联查询，即一对一，一对多，多对多，基本包含了常见的应用场景。
+
+其中多对多通过中间表来操作，即将两张表关联的字段放在同一张表中进行管理（多用户多商品场景）。
+
+所有的关联查询都需使用<resultMap>来管理映射，属性有id和type(数据类型)。
+
+一对一中，<resultMap>中使用<association>来映射复杂对象，属性有：
+
+* property,javaType   			==> 嵌套结果
+* property,column,select      ==> 嵌套查询
+
+一对多中，<resultMap>中使用<collection>来设置复杂映像，属性有property和ofType(bean类)。
+
+
+
+------
+
+
+
+
+
 # 关于作者
 
 * 邮箱(tyutjohnwang@163.com)
